@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>上課 YouTube 自動連播</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      margin: 0;
+      background: #f4f4f2;
+      color: #222;
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    h1 { margin: 0 0 10px; font-size: 34px; }
+    .sub { color: #666; margin-bottom: 22px; line-height: 1.6; }
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.08);
+    }
+    #playerWrap {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #111;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    #player { width: 100%; height: 100%; }
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      align-items: center;
+    }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 22px;
+      font-size: 17px;
+      cursor: pointer;
+    }
+    #startBtn { background: #222; color: white; font-weight: 700; }
+    #nextBtn, #restartBtn { background: #e9e9e6; color: #222; }
+    #status { margin-left: auto; color: #555; font-size: 15px; }
+    .list { margin-top: 18px; padding-left: 22px; line-height: 1.9; }
+    .active { font-weight: 700; color: #000; }
+    .hint {
+      margin-top: 16px;
+      background: #fff7d6;
+      border-radius: 12px;
+      padding: 12px 14px;
+      line-height: 1.55;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>上課 YouTube 自動連播</h1>
+  <div class="sub">
+    第一次只要按一次「開始播放」，之後會依序播放 5 支影片，
+    並按照設定的開始／結束時間自動切換。
+  </div>
+
+  <div class="card">
+    <div id="playerWrap"><div id="player"></div></div>
+
+    <div class="controls">
+      <button id="startBtn">▶ 開始播放</button>
+      <button id="nextBtn">下一支</button>
+      <button id="restartBtn">從第一支重來</button>
+      <div id="status">播放器載入中…</div>
+    </div>
+
+    <ol class="list" id="playlist"></ol>
+
+    <div class="hint">
+      建議使用 Chrome 或 Edge。第一次只要按一次「開始播放」，
+      後續會自動切換影片。
+    </div>
+  </div>
+</div>
+
+<script>
+const clips = [
+  { id: "PZQwET9mah4", start: 0,   end: 68,  label: "第 1 支：0:00 → 1:08" },
+  { id: "HPqNys1A3iw", start: 30,  end: 120, label: "第 2 支：0:30 → 2:00" },
+  { id: "XAXyskFDYXw", start: 8,   end: 105, label: "第 3 支：0:08 → 1:45" },
+  { id: "ChqnN3cKzXQ", start: 4,   end: null,label: "第 4 支：0:04 → 播到影片結束" },
+  { id: "bNg-ZQligKQ", start: 22,  end: 318, label: "第 5 支：0:22 → 5:18" }
+];
+
+let player;
+let current = 0;
+let started = false;
+let timer = null;
+
+const list = document.getElementById("playlist");
+const status = document.getElementById("status");
+
+clips.forEach((c, i) => {
+  const li = document.createElement("li");
+  li.id = "clip-" + i;
+  li.textContent = c.label;
+  list.appendChild(li);
+});
+
+function updateUI() {
+  clips.forEach((_, i) => {
+    const el = document.getElementById("clip-" + i);
+    el.className = (started && i === current) ? "active" : "";
+  });
+  if (!started) status.textContent = "已就緒，請按「開始播放」";
+  else status.textContent = `正在播放第 ${current + 1} 支 / ${clips.length}`;
+}
+
+function clearWatcher() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+}
+
+function watchEnd() {
+  clearWatcher();
+  const clip = clips[current];
+  if (clip.end == null) return;
+
+  timer = setInterval(() => {
+    if (!player || typeof player.getCurrentTime !== "function") return;
+    const t = player.getCurrentTime();
+    if (t >= clip.end - 0.2) {
+      clearWatcher();
+      goNext();
+    }
+  }, 100);
+}
+
+function playCurrent() {
+  const clip = clips[current];
+  updateUI();
+  player.loadVideoById({
+    videoId: clip.id,
+    startSeconds: clip.start
+  });
+}
+
+function goNext() {
+  clearWatcher();
+  if (current < clips.length - 1) {
+    current++;
+    playCurrent();
+  } else {
+    started = false;
+    status.textContent = "全部播放完畢";
+    clips.forEach((_, i) => document.getElementById("clip-" + i).className = "");
+    try { player.pauseVideo(); } catch(e) {}
+  }
+}
+
+window.onYouTubeIframeAPIReady = function() {
+  player = new YT.Player("player", {
+    width: "100%",
+    height: "100%",
+    videoId: clips[0].id,
+    playerVars: {
+      autoplay: 0,
+      controls: 1,
+      rel: 0,
+      playsinline: 1,
+      modestbranding: 1,
+      origin: window.location.origin
+    },
+    events: {
+      onReady: function() {
+        updateUI();
+      },
+      onStateChange: function(event) {
+        if (!started) return;
+        if (event.data === YT.PlayerState.PLAYING) watchEnd();
+        if (event.data === YT.PlayerState.ENDED) {
+          clearWatcher();
+          goNext();
+        }
+      },
+      onError: function(event) {
+        clearWatcher();
+        status.textContent = `第 ${current + 1} 支影片無法播放（YouTube 錯誤 ${event.data}）`;
+      }
+    }
+  });
+};
+
+document.getElementById("startBtn").addEventListener("click", () => {
+  if (!player) return;
+  current = 0;
+  started = true;
+  playCurrent();
+});
+
+document.getElementById("nextBtn").addEventListener("click", () => {
+  if (!player) return;
+  if (!started) started = true;
+  goNext();
+});
+
+document.getElementById("restartBtn").addEventListener("click", () => {
+  if (!player) return;
+  current = 0;
+  started = true;
+  playCurrent();
+});
+</script>
+<script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
