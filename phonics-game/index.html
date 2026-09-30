@@ -43,7 +43,7 @@ button{font:inherit}.app{width:min(1100px,94vw);margin:auto;padding:28px 0 48px}
 <button id="clearBtn" class="secondary">清除</button>
 <button id="startBtn" class="primary">開始遊戲 ▶</button>
 </div>
-<p class="note">這一版不使用瀏覽器 TTS。所有聲音都從 <span class="filehint">audio</span> 資料夾裡的 MP3 播放。</p>
+<p class="note">字母名稱與字母音使用老師上傳的錄音；CVC 單字若沒有 MP3，會自動使用英文語音播放。</p>
 </div>
 </section>
 
@@ -80,6 +80,8 @@ button{font:inherit}.app{width:min(1100px,94vw);margin:auto;padding:28px 0 48px}
 
 <script>
 const letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const letterAudio={"A_name":{"start":0.15,"end":3.18},"A_sound":{"start":3.36,"end":7.513},"B_name":{"start":7.693,"end":10.541},"B_sound":{"start":10.721,"end":14.352},"C_name":{"start":14.532,"end":17.118},"C_sound":{"start":17.298,"end":21.582},"D_name":{"start":21.762,"end":24.583},"D_sound":{"start":24.763,"end":28.577},"E_name":{"start":28.757,"end":31.108},"E_sound":{"start":31.287,"end":35.075},"F_name":{"start":35.255,"end":37.502},"F_sound":{"start":37.682,"end":41.652},"G_name":{"start":41.832,"end":44.131},"G_sound":{"start":44.311,"end":47.89},"H_name":{"start":48.069,"end":50.211},"H_sound":{"start":50.391,"end":53.918},"I_name":{"start":54.098,"end":56.188},"I_sound":{"start":56.368,"end":59.711},"J_name":{"start":59.891,"end":62.32},"J_sound":{"start":62.5,"end":66.131},"K_name":{"start":66.311,"end":68.558},"K_sound":{"start":68.738,"end":72.369},"L_name":{"start":72.549,"end":74.691},"L_sound":{"start":74.871,"end":78.737},"M_name":{"start":78.917,"end":81.215},"M_sound":{"start":81.395,"end":84.948},"N_name":{"start":85.128,"end":87.27},"N_sound":{"start":87.45,"end":91.473},"O_name":{"start":91.653,"end":94.134},"O_sound":{"start":94.314,"end":98.598},"P_name":{"start":98.778,"end":101.208},"P_sound":{"start":101.387,"end":105.149},"Q_name":{"start":105.329,"end":107.497},"Q_sound":{"start":107.677,"end":111.648},"R_name":{"start":111.828,"end":113.865},"R_sound":{"start":114.045,"end":117.415},"S_name":{"start":117.595,"end":119.449},"S_sound":{"start":119.629,"end":123.234},"T_name":{"start":123.414,"end":125.478},"T_sound":{"start":125.658,"end":129.028},"U_name":{"start":129.207,"end":131.506},"U_sound":{"start":131.686,"end":135.657},"V_name":{"start":135.837,"end":137.874},"V_sound":{"start":138.054,"end":142.495},"W_name":{"start":142.675,"end":145.548},"W_sound":{"start":145.728,"end":149.673},"X_name":{"start":149.853,"end":151.89},"X_sound":{"start":152.07,"end":156.302},"Y_name":{"start":156.482,"end":158.467},"Y_sound":{"start":158.647,"end":162.592},"Z_name":{"start":162.771,"end":164.914},"Z_sound":{"start":165.093,"end":169.351}};
+
 const cvcWords=[{"word":"cat","focus":"A","first":"C","target":"A"},{"word":"map","focus":"A","first":"M","target":"A"},{"word":"bat","focus":"B","first":"B","target":"A"},{"word":"bag","focus":"B","first":"B","target":"A"},{"word":"cat","focus":"C","first":"C","target":"A"},{"word":"cap","focus":"C","first":"C","target":"A"},{"word":"dog","focus":"D","first":"D","target":"O"},{"word":"dot","focus":"D","first":"D","target":"O"},{"word":"hen","focus":"E","first":"H","target":"E"},{"word":"net","focus":"E","first":"N","target":"E"},{"word":"fan","focus":"F","first":"F","target":"A"},{"word":"fin","focus":"F","first":"F","target":"I"},{"word":"gap","focus":"G","first":"G","target":"A"},{"word":"gum","focus":"G","first":"G","target":"U"},{"word":"hat","focus":"H","first":"H","target":"A"},{"word":"hop","focus":"H","first":"H","target":"O"},{"word":"pig","focus":"I","first":"P","target":"I"},{"word":"sit","focus":"I","first":"S","target":"I"},{"word":"jam","focus":"J","first":"J","target":"A"},{"word":"jet","focus":"J","first":"J","target":"E"},{"word":"kid","focus":"K","first":"K","target":"I"},{"word":"kit","focus":"K","first":"K","target":"I"},{"word":"leg","focus":"L","first":"L","target":"E"},{"word":"log","focus":"L","first":"L","target":"O"},{"word":"map","focus":"M","first":"M","target":"A"},{"word":"man","focus":"M","first":"M","target":"A"},{"word":"net","focus":"N","first":"N","target":"E"},{"word":"nut","focus":"N","first":"N","target":"U"},{"word":"dog","focus":"O","first":"D","target":"O"},{"word":"top","focus":"O","first":"T","target":"O"},{"word":"pig","focus":"P","first":"P","target":"I"},{"word":"pin","focus":"P","first":"P","target":"I"},{"word":"quit","focus":"Q","first":"Q","target":"U"},{"word":"quiz","focus":"Q","first":"Q","target":"U"},{"word":"red","focus":"R","first":"R","target":"E"},{"word":"run","focus":"R","first":"R","target":"U"},{"word":"sun","focus":"S","first":"S","target":"U"},{"word":"sit","focus":"S","first":"S","target":"I"},{"word":"top","focus":"T","first":"T","target":"O"},{"word":"tap","focus":"T","first":"T","target":"A"},{"word":"sun","focus":"U","first":"S","target":"U"},{"word":"run","focus":"U","first":"R","target":"U"},{"word":"van","focus":"V","first":"V","target":"A"},{"word":"vet","focus":"V","first":"V","target":"E"},{"word":"web","focus":"W","first":"W","target":"E"},{"word":"wig","focus":"W","first":"W","target":"I"},{"word":"fox","focus":"X","first":"F","target":"O"},{"word":"box","focus":"X","first":"B","target":"O"},{"word":"yak","focus":"Y","first":"Y","target":"A"},{"word":"yam","focus":"Y","first":"Y","target":"A"},{"word":"zip","focus":"Z","first":"Z","target":"I"},{"word":"zap","focus":"Z","first":"Z","target":"A"}];
 
 let selected=new Set(["A","B","C","D","T"]);
@@ -102,8 +104,8 @@ function selectedArr(){return [...selected]}
 function pickDistractors(correct,count=3){let pool=selectedArr().filter(x=>x!==correct);while(pool.length<count){const extra=letters.filter(x=>x!==correct&&!pool.includes(x));if(!extra.length)break;pool.push(randomFrom(extra))}return shuffle(pool).slice(0,count)}
 function makeQuestion(){
  const sel=selectedArr();
- if(level===0){const L=randomFrom(sel),low=Math.random()<.5;return{type:"letterName",audio:`audio/${L}.mp3`,correct:low?L.toLowerCase():L,lower:low,choices:shuffle([low?L.toLowerCase():L,...pickDistractors(L).map(x=>low?x.toLowerCase():x)])}}
- if(level===1){const L=randomFrom(sel),low=Math.random()<.5;return{type:"letterSound",audio:`audio/${L}_Sound.mp3`,correct:low?L.toLowerCase():L,lower:low,choices:shuffle([low?L.toLowerCase():L,...pickDistractors(L).map(x=>low?x.toLowerCase():x)])}}
+ if(level===0){const L=randomFrom(sel),low=Math.random()<.5;return{type:"letterName",audioKey:`${L}_name`,correct:low?L.toLowerCase():L,lower:low,choices:shuffle([low?L.toLowerCase():L,...pickDistractors(L).map(x=>low?x.toLowerCase():x)])}}
+ if(level===1){const L=randomFrom(sel),low=Math.random()<.5;return{type:"letterSound",audioKey:`${L}_sound`,correct:low?L.toLowerCase():L,lower:low,choices:shuffle([low?L.toLowerCase():L,...pickDistractors(L).map(x=>low?x.toLowerCase():x)])}}
  if(level===2){let pool=cvcWords.filter(x=>selected.has(x.first));if(!pool.length)pool=cvcWords;const x=randomFrom(pool);return{type:"cvcFirst",audio:`audio/cvc_${x.word}.mp3`,correct:x.first,choices:shuffle([x.first,...pickDistractors(x.first)])}}
  let pool=cvcWords.filter(x=>selected.has(x.focus));if(!pool.length)pool=cvcWords;const x=randomFrom(pool);let banned=new Set(x.word.toUpperCase().split(""));let dpool=selectedArr().filter(L=>L!==x.focus&&!banned.has(L));while(dpool.length<3){const extra=letters.filter(L=>L!==x.focus&&!banned.has(L)&&!dpool.includes(L));if(!extra.length)break;dpool.push(randomFrom(extra))}return{type:"cvcSound",audio:`audio/cvc_${x.word}.mp3`,correct:x.focus,choices:shuffle([x.focus,...shuffle(dpool).slice(0,3)])}
 }
@@ -120,10 +122,61 @@ function renderQuestion(){
  currentQ.choices.forEach(ch=>{const b=document.createElement("button");b.className="choice";b.textContent=ch;b.onclick=()=>answer(ch,b);choices.appendChild(b)});
  setTimeout(playCurrent,250)
 }
+let stopTimer=null;
+let spriteUrl=null;
+let spritePromise=null;
+async function ensureSprite(){
+ if(spriteUrl) return spriteUrl;
+ if(!spritePromise){
+   spritePromise=fetch("audio/letters_sprite.b64")
+     .then(r=>{if(!r.ok)throw new Error("audio bundle");return r.text()})
+     .then(t=>{
+       const clean=t.trim();
+       const bin=atob(clean);
+       const bytes=new Uint8Array(bin.length);
+       for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+       spriteUrl=URL.createObjectURL(new Blob([bytes],{type:"audio/mpeg"}));
+       return spriteUrl;
+     });
+ }
+ return spritePromise;
+}
+async function playSprite(key){
+ clearTimeout(stopTimer);
+ const seg=letterAudio[key];
+ if(!seg)return;
+ const startPlay=()=>{
+   audioPlayer.currentTime=seg.start;
+   audioPlayer.play().then(()=>{
+     stopTimer=setTimeout(()=>{audioPlayer.pause();},Math.max(100,(seg.end-seg.start)*1000));
+   }).catch(()=>{feedback.textContent="⚠️ 音檔暫時無法播放";feedback.className="feedback missing";});
+ };
+ try{
+   const url=await ensureSprite();
+   if(audioPlayer.src!==url){
+     audioPlayer.src=url;
+     audioPlayer.load();
+   }
+   if(audioPlayer.readyState>=1) startPlay();
+   else audioPlayer.onloadedmetadata=()=>{audioPlayer.onloadedmetadata=null;startPlay();};
+ }catch(e){
+   feedback.textContent="⚠️ 字母錄音載入失敗，請重新整理頁面";
+   feedback.className="feedback missing";
+ }
+}
 function playCurrent(){
  feedback.textContent="";
- audioPlayer.pause();audioPlayer.currentTime=0;audioPlayer.src=currentQ.audio;
- audioPlayer.play().catch(()=>{if(currentQ.type==="cvcFirst"||currentQ.type==="cvcSound"){const w=currentQ.audio.split("cvc_").pop().replace(".mp3","");const u=new SpeechSynthesisUtterance(w);u.lang="en-US";u.rate=.72;speechSynthesis.cancel();speechSynthesis.speak(u);feedback.textContent="";}else{feedback.innerHTML=`⚠️ 找不到音檔：<span class="filehint">${currentQ.audio}</span>`;feedback.className="feedback missing"}})
+ audioPlayer.pause();clearTimeout(stopTimer);
+ if(currentQ.type==="letterName"||currentQ.type==="letterSound"){
+   playSprite(currentQ.audioKey);
+   return;
+ }
+ audioPlayer.currentTime=0;audioPlayer.src=currentQ.audio;
+ audioPlayer.play().catch(()=>{
+   const w=currentQ.audio.split("cvc_").pop().replace(".mp3","");
+   const u=new SpeechSynthesisUtterance(w);u.lang="en-US";u.rate=.72;
+   speechSynthesis.cancel();speechSynthesis.speak(u);feedback.textContent="";
+ })
 }
 playBtn.onclick=playCurrent;
 function answer(choice,button){
