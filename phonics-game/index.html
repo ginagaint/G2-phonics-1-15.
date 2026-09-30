@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phonics Adventure MP3</title>
+<style>
+:root{
+  --bg:#fff9f0;--ink:#2f3542;--card:#fff;--yellow:#ffd36a;--mint:#8fd9c7;
+  --blue:#8fc4ff;--good:#c9f2d7;--bad:#ffd7d7;--shadow:0 12px 35px rgba(57,50,40,.12)
+}
+*{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;background:linear-gradient(#fff8ed,#f3f9ff);color:var(--ink);min-height:100vh}
+button{font:inherit}.app{width:min(1100px,94vw);margin:auto;padding:28px 0 48px}.screen{display:none}.screen.active{display:block}
+.title{text-align:center;font-size:clamp(34px,5vw,58px);margin:8px 0;font-weight:900}.subtitle{text-align:center;color:#6b7280;margin:0 0 24px}
+.card,.question-card{background:#fff;border-radius:28px;box-shadow:var(--shadow);padding:24px}.letter-grid{display:grid;grid-template-columns:repeat(13,1fr);gap:10px}
+.letter-pick{aspect-ratio:1;border:0;border-radius:15px;background:#fff;box-shadow:0 5px 15px rgba(0,0,0,.08);font-size:24px;font-weight:900;cursor:pointer}
+.letter-pick.selected{background:var(--mint);outline:3px solid #4aa995}.controls{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:22px}
+.primary,.secondary,.sound-btn,.choice,.next-btn{border:0;border-radius:18px;cursor:pointer;font-weight:900;box-shadow:0 6px 0 rgba(0,0,0,.12)}
+.primary{background:var(--yellow);padding:15px 28px;font-size:19px}.secondary{background:white;padding:13px 20px}.sound-btn{background:var(--blue);padding:18px 30px;font-size:22px;min-width:210px}
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}.level{background:white;border:2px solid #e5e7eb;border-radius:18px;padding:14px;text-align:center;font-weight:800}
+.level.current{border-color:#4aa995;background:#edfdf8}.level small{display:block;color:#7a8493;font-weight:600;margin-top:4px}
+.game-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.badge{background:#fff;border-radius:999px;padding:10px 14px;box-shadow:0 4px 12px rgba(0,0,0,.07);font-weight:800}
+.progress-wrap{height:14px;background:#ebeef3;border-radius:999px;overflow:hidden;margin-bottom:20px}.progress{height:100%;width:0;background:linear-gradient(90deg,var(--mint),var(--blue))}
+.question-card{text-align:center;padding:30px}.question-no{color:#778092;font-weight:800}.prompt{font-size:clamp(25px,4vw,40px);font-weight:900;margin:10px 0 18px}
+.choices{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:26px}.choice{background:#fff;border:3px solid #e7eaf0;padding:28px 16px;font-size:clamp(35px,7vw,74px);min-height:130px}
+.choice.correct{background:var(--good);border-color:#52b975}.choice.wrong{background:var(--bad);border-color:#e26b6b}.feedback{min-height:38px;margin-top:18px;font-size:20px;font-weight:900}
+.feedback.good{color:#27894b}.feedback.bad{color:#c64040}.feedback.missing{color:#9b6518}.next-btn{display:none;background:var(--yellow);padding:14px 26px;margin:14px auto 0;font-size:18px}
+.summary{text-align:center;padding:40px 20px}.score-big{font-size:72px;font-weight:1000}.note{color:#777;font-size:13px;text-align:center;margin-top:14px;line-height:1.5}
+.filehint{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#f6f7f9;border-radius:8px;padding:2px 6px}
+@media(max-width:850px){.letter-grid{grid-template-columns:repeat(7,1fr)}.levels{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.letter-grid{grid-template-columns:repeat(5,1fr)}.choices{grid-template-columns:1fr}.game-top{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="app">
+<section id="selectScreen" class="screen active">
+<h1 class="title">🔤 Phonics Adventure</h1>
+<p class="subtitle">MP3 教學版：先選擇要練習的字母</p>
+<div class="card">
+<h2 style="text-align:center;margin-top:0">選擇練習字母</h2>
+<div id="letterGrid" class="letter-grid"></div>
+<div class="controls">
+<button id="selectAllBtn" class="secondary">全部選取</button>
+<button id="clearBtn" class="secondary">清除</button>
+<button id="startBtn" class="primary">開始遊戲 ▶</button>
+</div>
+<p class="note">這一版不使用瀏覽器 TTS。所有聲音都從 <span class="filehint">audio</span> 資料夾裡的 MP3 播放。</p>
+</div>
+</section>
+
+<section id="gameScreen" class="screen">
+<div class="levels">
+<div class="level" data-level="0">Level 1<small>聽字母名 → 選大小寫</small></div>
+<div class="level" data-level="1">Level 2<small>聽字母音 → 選大小寫</small></div>
+<div class="level" data-level="2">Level 3<small>聽 CVC → 選字首音</small></div>
+<div class="level" data-level="3">Level 4<small>聽單字 → 選目標字母音</small></div>
+</div>
+<div class="game-top">
+<div class="badge" id="levelBadge">Level 1</div><div class="badge" id="scoreBadge">⭐ 0</div>
+<button id="backBtn" class="secondary">← 重新選字母</button>
+</div>
+<div class="progress-wrap"><div id="progress" class="progress"></div></div>
+<div class="question-card">
+<div id="questionNo" class="question-no"></div>
+<div id="prompt" class="prompt"></div>
+<button id="playBtn" class="sound-btn">🔊 播放聲音</button>
+<div id="choices" class="choices"></div>
+<div id="feedback" class="feedback"></div>
+<button id="nextBtn" class="next-btn">下一題 →</button>
+</div>
+</section>
+
+<section id="summaryScreen" class="screen">
+<div class="card summary"><div style="font-size:70px">🏆</div><h2>闖關完成！</h2>
+<div id="finalScore" class="score-big"></div><p id="finalText"></p>
+<div class="controls"><button id="againBtn" class="primary">再玩一次</button><button id="chooseAgainBtn" class="secondary">重新選字母</button></div>
+</div></section>
+</div>
+
+<audio id="audioPlayer" preload="auto"></audio>
+
+<script>
+const letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const cvcWords=[{"word":"cat","focus":"A","first":"C","target":"A"},{"word":"map","focus":"A","first":"M","target":"A"},{"word":"bat","focus":"B","first":"B","target":"A"},{"word":"bag","focus":"B","first":"B","target":"A"},{"word":"cat","focus":"C","first":"C","target":"A"},{"word":"cap","focus":"C","first":"C","target":"A"},{"word":"dog","focus":"D","first":"D","target":"O"},{"word":"dot","focus":"D","first":"D","target":"O"},{"word":"hen","focus":"E","first":"H","target":"E"},{"word":"net","focus":"E","first":"N","target":"E"},{"word":"fan","focus":"F","first":"F","target":"A"},{"word":"fin","focus":"F","first":"F","target":"I"},{"word":"gap","focus":"G","first":"G","target":"A"},{"word":"gum","focus":"G","first":"G","target":"U"},{"word":"hat","focus":"H","first":"H","target":"A"},{"word":"hop","focus":"H","first":"H","target":"O"},{"word":"pig","focus":"I","first":"P","target":"I"},{"word":"sit","focus":"I","first":"S","target":"I"},{"word":"jam","focus":"J","first":"J","target":"A"},{"word":"jet","focus":"J","first":"J","target":"E"},{"word":"kid","focus":"K","first":"K","target":"I"},{"word":"kit","focus":"K","first":"K","target":"I"},{"word":"leg","focus":"L","first":"L","target":"E"},{"word":"log","focus":"L","first":"L","target":"O"},{"word":"map","focus":"M","first":"M","target":"A"},{"word":"man","focus":"M","first":"M","target":"A"},{"word":"net","focus":"N","first":"N","target":"E"},{"word":"nut","focus":"N","first":"N","target":"U"},{"word":"dog","focus":"O","first":"D","target":"O"},{"word":"top","focus":"O","first":"T","target":"O"},{"word":"pig","focus":"P","first":"P","target":"I"},{"word":"pin","focus":"P","first":"P","target":"I"},{"word":"quit","focus":"Q","first":"Q","target":"U"},{"word":"quiz","focus":"Q","first":"Q","target":"U"},{"word":"red","focus":"R","first":"R","target":"E"},{"word":"run","focus":"R","first":"R","target":"U"},{"word":"sun","focus":"S","first":"S","target":"U"},{"word":"sit","focus":"S","first":"S","target":"I"},{"word":"top","focus":"T","first":"T","target":"O"},{"word":"tap","focus":"T","first":"T","target":"A"},{"word":"sun","focus":"U","first":"S","target":"U"},{"word":"run","focus":"U","first":"R","target":"U"},{"word":"van","focus":"V","first":"V","target":"A"},{"word":"vet","focus":"V","first":"V","target":"E"},{"word":"web","focus":"W","first":"W","target":"E"},{"word":"wig","focus":"W","first":"W","target":"I"},{"word":"fox","focus":"X","first":"F","target":"O"},{"word":"box","focus":"X","first":"B","target":"O"},{"word":"yak","focus":"Y","first":"Y","target":"A"},{"word":"yam","focus":"Y","first":"Y","target":"A"},{"word":"zip","focus":"Z","first":"Z","target":"I"},{"word":"zap","focus":"Z","first":"Z","target":"A"}];
+
+let selected=new Set(["A","B","C","D","T"]);
+let level=0,qIndex=0,score=0,answered=false,currentQ=null;
+const questionsPerLevel=8;
+const audioPlayer=document.getElementById("audioPlayer");
+const screens={select:selectScreen,game:gameScreen,summary:summaryScreen};
+
+function show(name){Object.values(screens).forEach(s=>s.classList.remove("active"));screens[name].classList.add("active");window.scrollTo({top:0,behavior:"smooth"})}
+const grid=document.getElementById("letterGrid");
+letters.forEach(L=>{const b=document.createElement("button");b.className="letter-pick";b.textContent=L;b.dataset.letter=L;b.onclick=()=>{selected.has(L)?selected.delete(L):selected.add(L);refreshSelection()};grid.appendChild(b)});
+function refreshSelection(){document.querySelectorAll(".letter-pick").forEach(b=>b.classList.toggle("selected",selected.has(b.dataset.letter)))}
+refreshSelection();
+selectAllBtn.onclick=()=>{letters.forEach(x=>selected.add(x));refreshSelection()};clearBtn.onclick=()=>{selected.clear();refreshSelection()};
+startBtn.onclick=()=>{if(selected.size<2){alert("請至少選 2 個字母");return}startGame()};
+function startGame(){level=0;qIndex=0;score=0;show("game");renderQuestion()}
+function randomFrom(a){return a[Math.floor(Math.random()*a.length)]}
+function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function selectedArr(){return [...selected]}
+function pickDistractors(correct,count=3){let pool=selectedArr().filter(x=>x!==correct);while(pool.length<count){const extra=letters.filter(x=>x!==correct&&!pool.includes(x));if(!extra.length)break;pool.push(randomFrom(extra))}return shuffle(pool).slice(0,count)}
+function makeQuestion(){
+ const sel=selectedArr();
+ if(level===0){const L=randomFrom(sel),low=Math.random()<.5;return{type:"letterName",audio:`audio/${L}.mp3`,correct:low?L.toLowerCase():L,lower:low,choices:shuffle([low?L.toLowerCase():L,...pickDistractors(L).map(x=>low?x.toLowerCase():x)])}}
+ if(level===1){const L=randomFrom(sel),low=Math.random()<.5;return{type:"letterSound",audio:`audio/${L}_Sound.mp3`,correct:low?L.toLowerCase():L,lower:low,choices:shuffle([low?L.toLowerCase():L,...pickDistractors(L).map(x=>low?x.toLowerCase():x)])}}
+ if(level===2){let pool=cvcWords.filter(x=>selected.has(x.first));if(!pool.length)pool=cvcWords;const x=randomFrom(pool);return{type:"cvcFirst",audio:`audio/cvc_${x.word}.mp3`,correct:x.first,choices:shuffle([x.first,...pickDistractors(x.first)])}}
+ let pool=cvcWords.filter(x=>selected.has(x.focus));if(!pool.length)pool=cvcWords;const x=randomFrom(pool);let banned=new Set(x.word.toUpperCase().split(""));let dpool=selectedArr().filter(L=>L!==x.focus&&!banned.has(L));while(dpool.length<3){const extra=letters.filter(L=>L!==x.focus&&!banned.has(L)&&!dpool.includes(L));if(!extra.length)break;dpool.push(randomFrom(extra))}return{type:"cvcSound",audio:`audio/cvc_${x.word}.mp3`,correct:x.focus,choices:shuffle([x.focus,...shuffle(dpool).slice(0,3)])}
+}
+function updateLevelUI(){document.querySelectorAll(".level").forEach((el,i)=>el.classList.toggle("current",i===level));levelBadge.textContent=`Level ${level+1}`;scoreBadge.textContent=`⭐ ${score}`;progress.style.width=`${((level*questionsPerLevel+qIndex)/(questionsPerLevel*4))*100}%`}
+function renderQuestion(){
+ answered=false;currentQ=makeQuestion();updateLevelUI();questionNo.textContent=`Question ${qIndex+1} / ${questionsPerLevel}`;
+ const prompts=[
+  currentQ.lower?"聽字母名稱，選出正確的小寫字母":"聽字母名稱，選出正確的大寫字母",
+  currentQ.lower?"聽字母音，選出正確的小寫字母":"聽字母音，選出正確的大寫字母",
+  "聽 CVC 字詞，選出它的字首音",
+  "聽單字，選出這題要辨認的字母音"
+ ];
+ prompt.textContent=prompts[level];feedback.textContent="";feedback.className="feedback";nextBtn.style.display="none";choices.innerHTML="";
+ currentQ.choices.forEach(ch=>{const b=document.createElement("button");b.className="choice";b.textContent=ch;b.onclick=()=>answer(ch,b);choices.appendChild(b)});
+ setTimeout(playCurrent,250)
+}
+function playCurrent(){
+ feedback.textContent="";
+ audioPlayer.pause();audioPlayer.currentTime=0;audioPlayer.src=currentQ.audio;
+ audioPlayer.play().catch(()=>{if(currentQ.type==="cvcFirst"||currentQ.type==="cvcSound"){const w=currentQ.audio.split("cvc_").pop().replace(".mp3","");const u=new SpeechSynthesisUtterance(w);u.lang="en-US";u.rate=.72;speechSynthesis.cancel();speechSynthesis.speak(u);feedback.textContent="";}else{feedback.innerHTML=`⚠️ 找不到音檔：<span class="filehint">${currentQ.audio}</span>`;feedback.className="feedback missing"}})
+}
+playBtn.onclick=playCurrent;
+function answer(choice,button){
+ if(answered)return;answered=true;[...document.querySelectorAll(".choice")].forEach(b=>{if(b.textContent===currentQ.correct)b.classList.add("correct")});
+ if(choice===currentQ.correct){score++;feedback.textContent="✅ 答對了！";feedback.className="feedback good"}else{button.classList.add("wrong");feedback.textContent=`❌ 正確答案是 ${currentQ.correct}`;feedback.className="feedback bad"}
+ scoreBadge.textContent=`⭐ ${score}`;nextBtn.style.display="block"
+}
+nextBtn.onclick=()=>{qIndex++;if(qIndex>=questionsPerLevel){level++;qIndex=0;if(level>=4){finish();return}}renderQuestion()};
+backBtn.onclick=()=>{audioPlayer.pause();show("select")};
+function finish(){audioPlayer.pause();const total=questionsPerLevel*4;finalScore.textContent=`${score} / ${total}`;finalText.textContent=score>=28?"太棒了！":score>=20?"很不錯！再玩一次會更熟。":"可以先多練 Level 1 和 Level 2。";show("summary")}
+againBtn.onclick=startGame;chooseAgainBtn.onclick=()=>show("select");
+</script>
+</body>
+</html>
